@@ -76,4 +76,34 @@ public class EmployeeService {
 
         employeeRepository.delete(employee);
     }
+    
+    @Transactional
+    @CachePut(
+        cacheNames = "employees",
+        key = "#result.employeeId"
+    )
+    public Employee addEmployee(Employee employee) {
+
+        System.out.println("Adding employee to MySQL");
+
+        if (employee.getEmployeeId() == null) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Employee ID is required"
+            );
+        }
+
+        if (employeeRepository
+                .findByEmployeeId(employee.getEmployeeId())
+                .isPresent()) {
+            throw new ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "Employee ID already exists"
+            );
+        }
+
+        Employee savedEmployee = employeeRepository.save(employee);
+
+        return savedEmployee;
+    }
 }
